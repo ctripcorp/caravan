@@ -5,7 +5,7 @@ Caravan（Ctrip SOA 开发工具集）
 
 Caravan是携程框架部门SOA常用开发工具的集合，包含配置、熔断等高度重用组件。
 
-更多产品介绍参见[Apollo配置中心介绍](https://github.com/ctripcorp/caravan/wiki/Caravan
+更多产品介绍参见: https://github.com/ctripcorp/caravan/wiki/Caravan
 
 # Features
 * caravan-common

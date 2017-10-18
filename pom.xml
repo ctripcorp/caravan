@@ -1,0 +1,315 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+        http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.ctrip.soa.caravan</groupId>
+    <artifactId>caravan</artifactId>
+    <version>1.11.15</version>
+    <packaging>pom</packaging>
+    <name>Caravan</name>
+    <description>Ctrip SOA Caravan Toolkit</description>
+    <url>https://ctripcorp.github.io/caravan</url>
+
+    <organization>
+        <name>Ctrip, Inc.</name>
+        <url>http://www.ctrip.com</url>
+    </organization>
+
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0</url>
+        </license>
+    </licenses>
+
+    <scm>
+        <url>https://github.com/ctripcorp/caravan</url>
+        <connection>scm:git:git://github.com/ctripcorp/caravan.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/ctripcorp/caravan.git</developerConnection>
+    </scm>
+
+    <issueManagement>
+        <system>github</system>
+        <url>https://github.com/ctripcorp/caravan/issues</url>
+    </issueManagement>
+
+    <developers>
+        <developer>
+            <id>koqizhao</id>
+            <name>Qiang Zhao</name>
+            <email>koqizhao@outlook.com</email>
+            <organization>Ctrip, Inc.</organization>
+            <organizationUrl>http://www.ctrip.com</organizationUrl>
+            <roles>
+                <role>Developer</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>w.jian</id>
+            <name>Jian Wang</name>
+            <email></email>
+            <organization>Ctrip, Inc.</organization>
+            <organizationUrl>http://www.ctrip.com</organizationUrl>
+            <roles>
+                <role>Developer</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>383124397</id>
+            <name>Dante</name>
+            <email>383124397@qq.com</email>
+            <organization>Ctrip, Inc.</organization>
+            <organizationUrl>http://www.ctrip.com</organizationUrl>
+            <roles>
+                <role>Developer</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>fangjing828</id>
+            <name>Alex</name>
+            <email>fangjing828@email.com</email>
+            <organization>Ctrip, Inc.</organization>
+            <organizationUrl>http://www.ctrip.com</organizationUrl>
+            <roles>
+                <role>Developer</role>
+            </roles>
+        </developer>  
+        <developer>
+            <id>wanbf</id>
+            <name>wanbf </name>
+            <email> 513111602@qq.com </email>
+            <organization>Ctrip, Inc.</organization>
+            <organizationUrl>http://www.ctrip.com</organizationUrl>
+            <roles>
+                <role>Developer</role>
+            </roles>
+        </developer>  
+        <developer>
+            <id>JodieQian</id>
+            <name>Jodie</name>
+            <email>qianjin1120@126.com</email>
+            <organization>Ctrip, Inc.</organization>
+            <organizationUrl>http://www.ctrip.com</organizationUrl>
+            <roles>
+                <role>Developer</role>
+            </roles>
+        </developer>   
+        <developer>
+            <id>marsqing</id>
+            <name>Marsqing</name>
+            <email>0124011@gmail.com</email>
+            <organization>Ctrip, Inc.</organization>
+            <organizationUrl>http://www.ctrip.com</organizationUrl>
+            <roles>
+                <role>Developer</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>leoliang</id>
+            <name>Jinhua Liang</name>
+            <email>liangjinhua@gmail.com</email>
+            <organization>Ctrip, Inc.</organization>
+            <organizationUrl>http://www.ctrip.com</organizationUrl>
+            <roles>
+                <role>Developer</role>
+            </roles>
+        </developer>
+    </developers>
+
+    <properties>
+        <java.version>1.7</java.version>
+        <source.encoding>UTF-8</source.encoding>
+        <slf4j.version>1.7.21</slf4j.version>
+        <guava.version>19.0</guava.version>
+        <jackson.version>2.9.2</jackson.version>
+        <asm.version>5.2</asm.version>
+        <ziplet.version>2.1.2</ziplet.version>
+        <httpasyncclient.version>4.1.2</httpasyncclient.version>
+        <httpclient.version>4.5.2</httpclient.version>
+        <httpcore.version>4.4.5</httpcore.version>
+        <servlet-api.version>3.1.0</servlet-api.version>
+        <junit.version>4.12</junit.version>
+        <mockito.version>1.10.19</mockito.version>
+        <maven-compiler-plugin.version>3.7.0</maven-compiler-plugin.version>
+        <maven-source-plugin.version>3.0.1</maven-source-plugin.version>
+    </properties>
+
+    <modules>
+        <module>caravan-common</module>
+        <module>caravan-configuration</module>
+        <module>caravan-util</module>
+        <module>caravan-web</module>
+        <module>caravan-hystrix</module>
+        <module>caravan-ribbon</module>
+        <module>caravan-etcd</module>
+        <module>caravan-protobuf</module>
+    </modules>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-api</artifactId>
+                <version>${slf4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.guava</groupId>
+                <artifactId>guava</artifactId>
+                <version>${guava.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-core</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-annotations</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-databind</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.dataformat</groupId>
+                <artifactId>jackson-dataformat-protobuf</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.dataformat</groupId>
+                <artifactId>jackson-dataformat-xml</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.httpcomponents</groupId>
+                <artifactId>httpcore</artifactId>
+                <version>${httpcore.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.httpcomponents</groupId>
+                <artifactId>httpcore-nio</artifactId>
+                <version>${httpcore.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.httpcomponents</groupId>
+                <artifactId>httpclient</artifactId>
+                <version>${httpclient.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.httpcomponents</groupId>
+                <artifactId>httpasyncclient</artifactId>
+                <version>${httpasyncclient.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.ziplet</groupId>
+                <artifactId>ziplet</artifactId>
+                <version>${ziplet.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.ow2.asm</groupId>
+                <artifactId>asm</artifactId>
+                <version>${asm.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>javax.servlet</groupId>
+                <artifactId>javax.servlet-api</artifactId>
+                <version>${servlet-api.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-simple</artifactId>
+                <version>${slf4j.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>junit</groupId>
+                <artifactId>junit</artifactId>
+                <version>${junit.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.mockito</groupId>
+                <artifactId>mockito-all</artifactId>
+                <version>${mockito.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.ctrip.soa.caravan</groupId>
+                <artifactId>caravan-common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.ctrip.soa.caravan</groupId>
+                <artifactId>caravan-configuration</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.ctrip.soa.caravan</groupId>
+                <artifactId>caravan-util</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.ctrip.soa.caravan</groupId>
+                <artifactId>caravan-web</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.ctrip.soa.caravan</groupId>
+                <artifactId>caravan-hystrix</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.ctrip.soa.caravan</groupId>
+                <artifactId>caravan-ribbon</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.ctrip.soa.caravan</groupId>
+                <artifactId>caravan-etcd</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.ctrip.soa.caravan</groupId>
+                <artifactId>caravan-protobuf</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>${maven-compiler-plugin.version}</version>
+                <configuration>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
+                    <encoding>${source.encoding}</encoding>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>${maven-source-plugin.version}</version>
+                <configuration>
+                    <attach>true</attach>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

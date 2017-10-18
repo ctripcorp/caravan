@@ -1,0 +1,17 @@
+.project
+.classpath
+build/
+target/
+.settings/
+bin/
+.gradle
+.metadata
+*~
+.recommenders
+
+.idea
+*.iml
+*.class
+*.lst
+
+*.versionsBackup

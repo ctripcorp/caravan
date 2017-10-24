@@ -1,19 +1,34 @@
 package com.ctrip.soa.caravan.protobuf.v2.customization;
 
-import com.fasterxml.jackson.dataformat.protobuf.PackageVersion;
-import com.fasterxml.jackson.dataformat.protobuf.ProtobufParser;
-import com.fasterxml.jackson.dataformat.protobuf.ProtobufReadContext;
-import com.fasterxml.jackson.dataformat.protobuf.ProtobufUtil;
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.Writer;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 
-import com.fasterxml.jackson.core.*;
+import com.fasterxml.jackson.core.Base64Variant;
+import com.fasterxml.jackson.core.FormatSchema;
+import com.fasterxml.jackson.core.JsonLocation;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonToken;
+import com.fasterxml.jackson.core.ObjectCodec;
+import com.fasterxml.jackson.core.SerializableString;
+import com.fasterxml.jackson.core.Version;
 import com.fasterxml.jackson.core.io.IOContext;
 import com.fasterxml.jackson.core.io.NumberInput;
 import com.fasterxml.jackson.core.util.ByteArrayBuilder;
 import com.fasterxml.jackson.core.util.VersionUtil;
-import com.fasterxml.jackson.dataformat.protobuf.schema.*;
+import com.fasterxml.jackson.dataformat.protobuf.PackageVersion;
+import com.fasterxml.jackson.dataformat.protobuf.ProtobufParser;
+import com.fasterxml.jackson.dataformat.protobuf.ProtobufReadContext;
+import com.fasterxml.jackson.dataformat.protobuf.ProtobufUtil;
+import com.fasterxml.jackson.dataformat.protobuf.schema.FieldType;
+import com.fasterxml.jackson.dataformat.protobuf.schema.ProtobufField;
+import com.fasterxml.jackson.dataformat.protobuf.schema.ProtobufMessage;
+import com.fasterxml.jackson.dataformat.protobuf.schema.ProtobufSchema;
+import com.fasterxml.jackson.dataformat.protobuf.schema.WireType;
 
 /**
  * Created by marsqing on 22/03/2017.
@@ -46,13 +61,13 @@ public class CustomProtobufParser extends ProtobufParser {
 
 
 
-  
 
-  protected final static double MIN_LONG_D = (double) Long.MIN_VALUE;
-  protected final static double MAX_LONG_D = (double) Long.MAX_VALUE;
 
-  protected final static double MIN_INT_D = (double) Integer.MIN_VALUE;
-  protected final static double MAX_INT_D = (double) Integer.MAX_VALUE;
+  protected final static double MIN_LONG_D = Long.MIN_VALUE;
+  protected final static double MAX_LONG_D = Long.MAX_VALUE;
+
+  protected final static double MIN_INT_D = Integer.MIN_VALUE;
+  protected final static double MAX_INT_D = Integer.MAX_VALUE;
 
   final static BigInteger BI_MIN_INT = BigInteger.valueOf(Integer.MIN_VALUE);
   final static BigInteger BI_MAX_INT = BigInteger.valueOf(Integer.MAX_VALUE);
@@ -107,7 +122,8 @@ public class CustomProtobufParser extends ProtobufParser {
   private final static int[] UTF8_UNIT_CODES = ProtobufUtil.sUtf8UnitLengths;
 
 
-  public void setSchema(ProtobufSchema schema)
+  @Override
+public void setSchema(ProtobufSchema schema)
   {
     if (_schema == schema) {
       return;
@@ -248,7 +264,7 @@ public class CustomProtobufParser extends ProtobufParser {
 
   @Override
   public boolean canUseSchema(FormatSchema schema) {
-    return (schema instanceof ProtobufSchema);
+    return schema instanceof ProtobufSchema;
   }
 
   @Override public ProtobufSchema getSchema() {
@@ -277,7 +293,8 @@ public class CustomProtobufParser extends ProtobufParser {
     return false;
   }
 
-  protected void _releaseBuffers() throws IOException
+  @Override
+protected void _releaseBuffers() throws IOException
   {
     if (_bufferRecyclable) {
       byte[] buf = _inputBuffer;
@@ -343,14 +360,14 @@ public class CustomProtobufParser extends ProtobufParser {
         _currentField = _currentMessage.firstField();
         _state = STATE_ROOT_KEY;
         _parsingContext.setMessageType(_currentMessage);
-        return (_currToken = JsonToken.START_OBJECT);
+        return _currToken = JsonToken.START_OBJECT;
 
       case STATE_ROOT_KEY:
         // end-of-input?
         if (_inputPtr >= _inputEnd) {
           if (!loadMoreCtrip()) {
             close();
-            return (_currToken = JsonToken.END_OBJECT);
+            return _currToken = JsonToken.END_OBJECT;
           }
         }
         return _handleRootKey(_decodeVInt());
@@ -362,14 +379,14 @@ public class CustomProtobufParser extends ProtobufParser {
       }
       case STATE_NESTED_KEY:
         if (_checkEnd()) {
-          return (_currToken = JsonToken.END_OBJECT);
+          return _currToken = JsonToken.END_OBJECT;
         }
         return _handleNestedKey(_decodeVInt());
 
       case STATE_ARRAY_START:
         _parsingContext = _parsingContext.createChildArrayContext(_currentField);
         _state = STATE_ARRAY_VALUE_FIRST;
-        return (_currToken = JsonToken.START_ARRAY);
+        return _currToken = JsonToken.START_ARRAY;
 
       case STATE_ARRAY_START_PACKED:
 
@@ -386,7 +403,7 @@ public class CustomProtobufParser extends ProtobufParser {
         _currentEndOffset = newEnd;
         _parsingContext = _parsingContext.createChildArrayContext(_currentField, newEnd);
         _state = STATE_ARRAY_VALUE_PACKED;
-        return (_currToken = JsonToken.START_ARRAY);
+        return _currToken = JsonToken.START_ARRAY;
 
       case STATE_ARRAY_VALUE_FIRST: // unpacked
       {
@@ -398,7 +415,7 @@ public class CustomProtobufParser extends ProtobufParser {
 
       case STATE_ARRAY_VALUE_OTHER: // unpacked
         if (_checkEnd()) { // need to check constraints set by surrounding Message (object)
-          return (_currToken = JsonToken.END_ARRAY);
+          return _currToken = JsonToken.END_ARRAY;
         }
         if (_inputPtr >= _inputEnd) {
           if (!loadMoreCtrip()) {
@@ -410,13 +427,13 @@ public class CustomProtobufParser extends ProtobufParser {
             _parsingContext = parent;
             _currentField = parent.getField();
             _state = STATE_MESSAGE_END;
-            return (_currToken = JsonToken.END_ARRAY);
+            return _currToken = JsonToken.END_ARRAY;
           }
         }
       {
         int tag = _decodeVInt();
         // expected case: another value in same array
-        if (_currentField.id == (tag >> 3)) {
+        if (_currentField.id == tag >> 3) {
           JsonToken t = _readNextValue(_currentField.type, STATE_ARRAY_VALUE_OTHER);
           _currToken = t;
           // remain in same state
@@ -428,12 +445,12 @@ public class CustomProtobufParser extends ProtobufParser {
         _parsingContext = parent;
         _currentField = parent.getField();
         _state = STATE_ARRAY_END;
-        return (_currToken = JsonToken.END_ARRAY);
+        return _currToken = JsonToken.END_ARRAY;
       }
 
       case STATE_ARRAY_VALUE_PACKED:
         if (_checkEnd()) { // need to check constraints of this array itself
-          return (_currToken = JsonToken.END_ARRAY);
+          return _currToken = JsonToken.END_ARRAY;
         }
       {
         JsonToken t = _readNextValue(_currentField.type, STATE_ARRAY_VALUE_PACKED);
@@ -460,7 +477,7 @@ public class CustomProtobufParser extends ProtobufParser {
       }
 
       case STATE_MESSAGE_END: // occurs if we end with array
-        return (_currToken = JsonToken.END_OBJECT);
+        return _currToken = JsonToken.END_OBJECT;
 
       case STATE_CLOSED:
         return null;
@@ -497,11 +514,11 @@ public class CustomProtobufParser extends ProtobufParser {
 
   private JsonToken _handleRootKey(int tag) throws IOException
   {
-    int wireType = (tag & 0x7);
-    int id = (tag >> 3);
+    int wireType = tag & 0x7;
+    int id = tag >> 3;
 
     ProtobufField f;
-    if ((_currentField == null) || (f = _currentField.nextOrThisIf(id)) == null) {
+    if (_currentField == null || (f = _currentField.nextOrThisIf(id)) == null) {
       f = _currentMessage.field(id);
     }
     // Note: may be null; if so, value needs to be skipped
@@ -524,16 +541,16 @@ public class CustomProtobufParser extends ProtobufParser {
       _state = STATE_ROOT_VALUE;
     }
     _currentField = f;
-    return (_currToken = JsonToken.FIELD_NAME);
+    return _currToken = JsonToken.FIELD_NAME;
   }
 
   private JsonToken _handleNestedKey(int tag) throws IOException
   {
-    int wireType = (tag & 0x7);
-    int id = (tag >> 3);
+    int wireType = tag & 0x7;
+    int id = tag >> 3;
 
     ProtobufField f;
-    if ((_currentField == null) || (f = _currentField.nextOrThisIf(id)) == null) {
+    if (_currentField == null || (f = _currentField.nextOrThisIf(id)) == null) {
       f = _currentMessage.field(id);
     }
     // Note: may be null; if so, value needs to be skipped
@@ -556,7 +573,7 @@ public class CustomProtobufParser extends ProtobufParser {
       _state = STATE_NESTED_VALUE;
     }
     _currentField = f;
-    return (_currToken = JsonToken.FIELD_NAME);
+    return _currToken = JsonToken.FIELD_NAME;
   }
 
   private JsonToken _readNextValue(FieldType t, int nextState) throws IOException
@@ -710,7 +727,7 @@ public class CustomProtobufParser extends ProtobufParser {
       _skipUnknownValue(wireType);
       if (_state == STATE_NESTED_KEY) {
         if (_checkEnd()) {
-          return (_currToken = JsonToken.END_OBJECT);
+          return _currToken = JsonToken.END_OBJECT;
         }
         if (_inputPtr >= _inputEnd) {
           loadMoreGuaranteedCtrip();
@@ -718,12 +735,12 @@ public class CustomProtobufParser extends ProtobufParser {
       } else if (_inputPtr >= _inputEnd) {
         if (!loadMoreCtrip()) {
           close();
-          return (_currToken = JsonToken.END_OBJECT);
+          return _currToken = JsonToken.END_OBJECT;
         }
       }
       tag = _decodeVInt();
 
-      wireType = (tag & 0x7);
+      wireType = tag & 0x7;
       // Note: may be null; if so, value needs to be skipped
       _currentField = _currentMessage.field(tag >> 3);
       if (_currentField == null) {
@@ -735,7 +752,7 @@ public class CustomProtobufParser extends ProtobufParser {
       if (!_currentField.isValidFor(wireType)) {
         _reportIncompatibleType(_currentField, wireType);
       }
-      return (_currToken = JsonToken.FIELD_NAME);
+      return _currToken = JsonToken.FIELD_NAME;
     }
   }
 
@@ -781,8 +798,8 @@ public class CustomProtobufParser extends ProtobufParser {
       int tag = _decodeVInt();
       // inlined _handleRootKey()
 
-      int wireType = (tag & 0x7);
-      int id = (tag >> 3);
+      int wireType = tag & 0x7;
+      int id = tag >> 3;
 
       ProtobufField f = _findField(id);
       if (f == null) {
@@ -817,8 +834,8 @@ public class CustomProtobufParser extends ProtobufParser {
       int tag = _decodeVInt();
       // inlined '_handleNestedKey()'
 
-      int wireType = (tag & 0x7);
-      int id = (tag >> 3);
+      int wireType = tag & 0x7;
+      int id = tag >> 3;
 
       ProtobufField f = _findField(id);
       if (f == null) {
@@ -845,7 +862,7 @@ public class CustomProtobufParser extends ProtobufParser {
       _currToken = JsonToken.FIELD_NAME;
       return name.equals(sstr.getValue());
     }
-    return (nextToken() == JsonToken.FIELD_NAME) && sstr.getValue().equals(getCurrentName());
+    return nextToken() == JsonToken.FIELD_NAME && sstr.getValue().equals(getCurrentName());
   }
 
   @Override
@@ -862,8 +879,8 @@ public class CustomProtobufParser extends ProtobufParser {
       int tag = _decodeVInt();
       // inlined _handleRootKey()
 
-      int wireType = (tag & 0x7);
-      int id = (tag >> 3);
+      int wireType = tag & 0x7;
+      int id = tag >> 3;
 
       ProtobufField f = _findField(id);
       if (f == null) {
@@ -898,8 +915,8 @@ public class CustomProtobufParser extends ProtobufParser {
       int tag = _decodeVInt();
       // inlined '_handleNestedKey()'
 
-      int wireType = (tag & 0x7);
-      int id = (tag >> 3);
+      int wireType = tag & 0x7;
+      int id = tag >> 3;
 
       ProtobufField f = _findField(id);
       if (f == null) {
@@ -926,7 +943,7 @@ public class CustomProtobufParser extends ProtobufParser {
       _currToken = JsonToken.FIELD_NAME;
       return name;
     }
-    return (nextToken() == JsonToken.FIELD_NAME) ? getCurrentName() : null;
+    return nextToken() == JsonToken.FIELD_NAME ? getCurrentName() : null;
   }
 
   @Override
@@ -946,13 +963,13 @@ public class CustomProtobufParser extends ProtobufParser {
       {
         JsonToken t = _readNextValue(_currentField.type, STATE_ROOT_KEY);
         _currToken = t;
-        return (t == JsonToken.VALUE_STRING) ? getText() : null;
+        return t == JsonToken.VALUE_STRING ? getText() : null;
       }
       case STATE_NESTED_VALUE:
       {
         JsonToken t = _readNextValue(_currentField.type, STATE_NESTED_KEY);
         _currToken = t;
-        return (t == JsonToken.VALUE_STRING) ? getText() : null;
+        return t == JsonToken.VALUE_STRING ? getText() : null;
       }
       case STATE_ARRAY_VALUE_FIRST: // unpacked
         if (_currentField.type == FieldType.STRING) {
@@ -983,7 +1000,7 @@ public class CustomProtobufParser extends ProtobufParser {
       {
         int tag = _decodeVInt();
         // expected case: another value in same array
-        if (_currentField.id == (tag >> 3)) {
+        if (_currentField.id == tag >> 3) {
           if (_currentField.type == FieldType.STRING) {
             break;
           }
@@ -1011,7 +1028,7 @@ public class CustomProtobufParser extends ProtobufParser {
         }
         break;
       default:
-        return (nextToken() == JsonToken.VALUE_STRING) ? getText() : null;
+        return nextToken() == JsonToken.VALUE_STRING ? getText() : null;
     }
 
     // At this point we know we have text token so:
@@ -1022,7 +1039,7 @@ public class CustomProtobufParser extends ProtobufParser {
       _textBuffer.resetWithEmpty();
       return "";
     }
-    if ((_inputPtr + len) <= _inputEnd) {
+    if (_inputPtr + len <= _inputEnd) {
       return _finishShortText(len);
     }
     _finishToken();
@@ -1032,7 +1049,7 @@ public class CustomProtobufParser extends ProtobufParser {
   private final ProtobufField _findField(int id)
   {
     ProtobufField f;
-    if ((_currentField == null) || (f = _currentField.nextOrThisIf(id)) == null) {
+    if (_currentField == null || (f = _currentField.nextOrThisIf(id)) == null) {
       f = _currentMessage.field(id);
     }
     _currentField = f;
@@ -1058,7 +1075,7 @@ public class CustomProtobufParser extends ProtobufParser {
       if (_tokenIncomplete) {
         // inlined '_finishToken()`
         final int len = _decodedLength;
-        if ((_inputPtr + len) <= _inputEnd) {
+        if (_inputPtr + len <= _inputEnd) {
           _tokenIncomplete = false;
           return _finishShortText(len);
         }
@@ -1140,7 +1157,7 @@ public class CustomProtobufParser extends ProtobufParser {
       if (_tokenIncomplete) {
         // inlined '_finishToken()`
         final int len = _decodedLength;
-        if ((_inputPtr + len) <= _inputEnd) {
+        if (_inputPtr + len <= _inputEnd) {
           _tokenIncomplete = false;
           return _finishShortText(len);
         }
@@ -1173,7 +1190,7 @@ public class CustomProtobufParser extends ProtobufParser {
       if (_tokenIncomplete) {
         // inlined '_finishToken()`
         final int len = _decodedLength;
-        if ((_inputPtr + len) <= _inputEnd) {
+        if (_inputPtr + len <= _inputEnd) {
           _tokenIncomplete = false;
           _finishShortText(len);
         } else {
@@ -1424,7 +1441,8 @@ public class CustomProtobufParser extends ProtobufParser {
     /**********************************************************
      */
 
-  protected void _checkNumericValue(int expType) throws IOException
+  @Override
+protected void _checkNumericValue(int expType) throws IOException
   {
     // Int or float?
     if (_currToken == JsonToken.VALUE_NUMBER_INT || _currToken == JsonToken.VALUE_NUMBER_FLOAT) {
@@ -1433,13 +1451,14 @@ public class CustomProtobufParser extends ProtobufParser {
     _reportError("Current token ("+_currToken+") not numeric, can not use numeric value accessors");
   }
 
-  protected void convertNumberToInt() throws IOException
+  @Override
+protected void convertNumberToInt() throws IOException
   {
     // First, converting from long ought to be easy
     if ((_numTypesValid & NR_LONG) != 0) {
       // Let's verify it's lossless conversion by simple roundtrip
       int result = (int) _numberLong;
-      if (((long) result) != _numberLong) {
+      if (result != _numberLong) {
         _reportError("Numeric value ("+getText()+") out of range of int");
       }
       _numberInt = result;
@@ -1472,10 +1491,11 @@ public class CustomProtobufParser extends ProtobufParser {
     _numTypesValid |= NR_INT;
   }
 
-  protected void convertNumberToLong() throws IOException
+  @Override
+protected void convertNumberToLong() throws IOException
   {
     if ((_numTypesValid & NR_INT) != 0) {
-      _numberLong = (long) _numberInt;
+      _numberLong = _numberInt;
     } else if ((_numTypesValid & NR_BIGINT) != 0) {
       if (BI_MIN_LONG.compareTo(_numberBigInt) > 0
           || BI_MAX_LONG.compareTo(_numberBigInt) < 0) {
@@ -1504,7 +1524,8 @@ public class CustomProtobufParser extends ProtobufParser {
     _numTypesValid |= NR_LONG;
   }
 
-  protected void convertNumberToBigInteger() throws IOException
+  @Override
+protected void convertNumberToBigInteger() throws IOException
   {
     if ((_numTypesValid & NR_BIGDECIMAL) != 0) {
       // here it'll just get truncated, no exceptions thrown
@@ -1523,7 +1544,8 @@ public class CustomProtobufParser extends ProtobufParser {
     _numTypesValid |= NR_BIGINT;
   }
 
-  protected void convertNumberToFloat() throws IOException
+  @Override
+protected void convertNumberToFloat() throws IOException
   {
     // Note: this MUST start with more accurate representations, since we don't know which
     //  value is the original one (others get generated when requested)
@@ -1534,36 +1556,38 @@ public class CustomProtobufParser extends ProtobufParser {
     } else if ((_numTypesValid & NR_DOUBLE) != 0) {
       _numberFloat = (float) _numberDouble;
     } else if ((_numTypesValid & NR_LONG) != 0) {
-      _numberFloat = (float) _numberLong;
+      _numberFloat = _numberLong;
     } else if ((_numTypesValid & NR_INT) != 0) {
-      _numberFloat = (float) _numberInt;
+      _numberFloat = _numberInt;
     } else {
       _throwInternal();
     }
     _numTypesValid |= NR_FLOAT;
   }
 
-  protected void convertNumberToDouble() throws IOException
+  @Override
+protected void convertNumberToDouble() throws IOException
   {
     // Note: this MUST start with more accurate representations, since we don't know which
     //  value is the original one (others get generated when requested)
     if ((_numTypesValid & NR_BIGDECIMAL) != 0) {
       _numberDouble = _numberBigDecimal.doubleValue();
     } else if ((_numTypesValid & NR_FLOAT) != 0) {
-      _numberDouble = (double) _numberFloat;
+      _numberDouble = _numberFloat;
     } else if ((_numTypesValid & NR_BIGINT) != 0) {
       _numberDouble = _numberBigInt.doubleValue();
     } else if ((_numTypesValid & NR_LONG) != 0) {
-      _numberDouble = (double) _numberLong;
+      _numberDouble = _numberLong;
     } else if ((_numTypesValid & NR_INT) != 0) {
-      _numberDouble = (double) _numberInt;
+      _numberDouble = _numberInt;
     } else {
       _throwInternal();
     }
     _numTypesValid |= NR_DOUBLE;
   }
 
-  protected void convertNumberToBigDecimal() throws IOException
+  @Override
+protected void convertNumberToBigDecimal() throws IOException
   {
     // Note: this MUST start with more accurate representations, since we don't know which
     //  value is the original one (others get generated when requested)
@@ -1593,13 +1617,14 @@ public class CustomProtobufParser extends ProtobufParser {
    * Method called to finish parsing of a token so that token contents
    * are retriable
    */
-  protected void _finishToken() throws IOException
+  @Override
+protected void _finishToken() throws IOException
   {
     _tokenIncomplete = false;
 
     if (_currToken == JsonToken.VALUE_STRING) {
       final int len = _decodedLength;
-      if (len > (_inputEnd - _inputPtr)) {
+      if (len > _inputEnd - _inputPtr) {
         // or if not, could we read?
         if (len >= _inputBuffer.length) {
           // If not enough space, need different handling
@@ -1620,7 +1645,8 @@ public class CustomProtobufParser extends ProtobufParser {
     _throwInternal();
   }
 
-  protected byte[] _finishBytes(int len) throws IOException
+  @Override
+protected byte[] _finishBytes(int len) throws IOException
   {
     byte[] b = new byte[len];
     if (_inputPtr >= _inputEnd) {
@@ -1669,22 +1695,22 @@ public class CustomProtobufParser extends ProtobufParser {
         case 0:
           break;
         case 1:
-          i = ((i & 0x1F) << 6) | (inputBuf[inPtr++] & 0x3F);
+          i = (i & 0x1F) << 6 | inputBuf[inPtr++] & 0x3F;
           break;
         case 2:
-          i = ((i & 0x0F) << 12)
-              | ((inputBuf[inPtr++] & 0x3F) << 6)
-              | (inputBuf[inPtr++] & 0x3F);
+          i = (i & 0x0F) << 12
+              | (inputBuf[inPtr++] & 0x3F) << 6
+              | inputBuf[inPtr++] & 0x3F;
           break;
         case 3:
-          i = ((i & 0x07) << 18)
-              | ((inputBuf[inPtr++] & 0x3F) << 12)
-              | ((inputBuf[inPtr++] & 0x3F) << 6)
-              | (inputBuf[inPtr++] & 0x3F);
+          i = (i & 0x07) << 18
+              | (inputBuf[inPtr++] & 0x3F) << 12
+              | (inputBuf[inPtr++] & 0x3F) << 6
+              | inputBuf[inPtr++] & 0x3F;
           // note: this is the codepoint value; need to split, too
           i -= 0x10000;
-          outBuf[outPtr++] = (char) (0xD800 | (i >> 10));
-          i = 0xDC00 | (i & 0x3FF);
+          outBuf[outPtr++] = (char) (0xD800 | i >> 10);
+          i = 0xDC00 | i & 0x3FF;
           break;
         default: // invalid
           _reportError("Invalid byte "+Integer.toHexString(i)+" in Unicode text block");
@@ -1721,7 +1747,7 @@ public class CustomProtobufParser extends ProtobufParser {
           if ((d & 0xC0) != 0x080) {
             _reportInvalidOther(d & 0xFF, _inputPtr);
           }
-          c = ((c & 0x1F) << 6) | (d & 0x3F);
+          c = (c & 0x1F) << 6 | d & 0x3F;
         }
         break;
         case 2: // 3-byte UTF
@@ -1730,13 +1756,13 @@ public class CustomProtobufParser extends ProtobufParser {
         case 3: // 4-byte UTF
           c = _decodeUTF8_4(c);
           // Let's add first part right away:
-          outBuf[outPtr++] = (char) (0xD800 | (c >> 10));
+          outBuf[outPtr++] = (char) (0xD800 | c >> 10);
           if (outPtr >= outBuf.length) {
             outBuf = _textBuffer.finishCurrentSegment();
             outPtr = 0;
             outEnd = outBuf.length;
           }
-          c = 0xDC00 | (c & 0x3FF);
+          c = 0xDC00 | c & 0x3FF;
           // And let the other char output down below
           break;
         default:
@@ -1762,12 +1788,12 @@ public class CustomProtobufParser extends ProtobufParser {
     if ((d & 0xC0) != 0x080) {
       _reportInvalidOther(d & 0xFF, _inputPtr);
     }
-    int c = (c1 << 6) | (d & 0x3F);
+    int c = c1 << 6 | d & 0x3F;
     d = _nextByte();
     if ((d & 0xC0) != 0x080) {
       _reportInvalidOther(d & 0xFF, _inputPtr);
     }
-    c = (c << 6) | (d & 0x3F);
+    c = c << 6 | d & 0x3F;
     return c;
   }
 
@@ -1781,17 +1807,17 @@ public class CustomProtobufParser extends ProtobufParser {
     if ((d & 0xC0) != 0x080) {
       _reportInvalidOther(d & 0xFF, _inputPtr);
     }
-    c = ((c & 0x07) << 6) | (d & 0x3F);
+    c = (c & 0x07) << 6 | d & 0x3F;
     d = _nextByte();
     if ((d & 0xC0) != 0x080) {
       _reportInvalidOther(d & 0xFF, _inputPtr);
     }
-    c = (c << 6) | (d & 0x3F);
+    c = c << 6 | d & 0x3F;
     d = _nextByte();
     if ((d & 0xC0) != 0x080) {
       _reportInvalidOther(d & 0xFF, _inputPtr);
     }
-    return ((c << 6) | (d & 0x3F)) - 0x10000;
+    return (c << 6 | d & 0x3F) - 0x10000;
   }
 
   private final int _nextByte() throws IOException {
@@ -1881,7 +1907,8 @@ public class CustomProtobufParser extends ProtobufParser {
     /**********************************************************
      */
 
-  protected ByteArrayBuilder _getByteArrayBuilder() {
+  @Override
+protected ByteArrayBuilder _getByteArrayBuilder() {
     if (_byteArrayBuilder == null) {
       _byteArrayBuilder = new ByteArrayBuilder();
     } else {
@@ -1890,7 +1917,8 @@ public class CustomProtobufParser extends ProtobufParser {
     return _byteArrayBuilder;
   }
 
-  protected void _closeInput() throws IOException {
+  @Override
+protected void _closeInput() throws IOException {
     if (_inputStream != null) {
       if (_ioContext.isResourceManaged() || isEnabled(JsonParser.Feature.AUTO_CLOSE_SOURCE)) {
         _inputStream.close();
@@ -1918,7 +1946,8 @@ public class CustomProtobufParser extends ProtobufParser {
     /**********************************************************
      */
 
-  protected void _skipBytes(int len) throws IOException
+  @Override
+protected void _skipBytes(int len) throws IOException
   {
     while (true) {
       int toAdd = Math.min(len, _inputEnd - _inputPtr);
@@ -1931,30 +1960,32 @@ public class CustomProtobufParser extends ProtobufParser {
     }
   }
 
-  protected void _skipVInt() throws IOException
+  @Override
+protected void _skipVInt() throws IOException
   {
     int ptr = _inputPtr;
-    if ((ptr + 10) > _inputEnd) {
+    if (ptr + 10 > _inputEnd) {
       _skipVIntSlow();
       return;
     }
     final byte[] buf = _inputBuffer;
     // inline checks for first 4 bytes
-    if ((buf[ptr++] >= 0) || (buf[ptr++] >= 0) || (buf[ptr++] >= 0) || (buf[ptr++] >= 0)) {
+    if (buf[ptr++] >= 0 || buf[ptr++] >= 0 || buf[ptr++] >= 0 || buf[ptr++] >= 0) {
       _inputPtr = ptr;
       return;
     }
     // but loop beyond
     for (int end = ptr+6; ptr < end; ++ptr) {
       if (buf[ptr] >= 0) {
-        _inputPtr = ptr;
+        _inputPtr = ptr + 1;
         return;
       }
     }
     _reportTooLongVInt(buf[ptr-1]);
   }
 
-  protected void _skipVIntSlow() throws IOException
+  @Override
+protected void _skipVIntSlow() throws IOException
   {
     for (int i = 0; i < 10; ++i) {
       if (_inputPtr >= _inputEnd) {
@@ -1978,7 +2009,7 @@ public class CustomProtobufParser extends ProtobufParser {
   {
     int ptr = _inputPtr;
     // 5 x 7 = 35 bits -> all we need is 32
-    if ((ptr + 10) > _inputEnd || slowMode) {
+    if (ptr + 10 > _inputEnd || slowMode) {
       return _decodeVIntSlow();
     }
 
@@ -1990,13 +2021,13 @@ public class CustomProtobufParser extends ProtobufParser {
       // Tag VInts guaranteed to stay in 32 bits, i.e. no more than 5 bytes
       int ch = buf[ptr++];
       if (ch < 0) {
-        v |= ((ch & 0x7F) << 7);
+        v |= (ch & 0x7F) << 7;
         ch = buf[ptr++];
         if (ch < 0) {
-          v |= ((ch & 0x7F) << 14);
+          v |= (ch & 0x7F) << 14;
           ch = buf[ptr++];
           if (ch < 0) {
-            v |= ((ch & 0x7F) << 21);
+            v |= (ch & 0x7F) << 21;
 
             // and now the last byte; at most 4 bits
             int last = buf[ptr++] & 0xFF;
@@ -2015,15 +2046,15 @@ public class CustomProtobufParser extends ProtobufParser {
                 _reportTooLongVInt(last);
               }
             }
-            v |= (last << 28);
+            v |= last << 28;
           } else {
-            v |= (ch << 21);
+            v |= ch << 21;
           }
         } else {
-          v |= (ch << 14);
+          v |= ch << 14;
         }
       } else {
-        v |= (ch << 7);
+        v |= ch << 7;
       }
     }
     _inputPtr = ptr;
@@ -2036,7 +2067,7 @@ public class CustomProtobufParser extends ProtobufParser {
   {
     int ptr = _inputPtr;
 
-    if ((ptr + 5) > _inputEnd) {
+    if (ptr + 5 > _inputEnd) {
       int v = _decodeVIntSlow();
       if (v < 0) {
         _reportInvalidLength(v);
@@ -2052,13 +2083,13 @@ public class CustomProtobufParser extends ProtobufParser {
       // Tag VInts guaranteed to stay in 32 bits, i.e. no more than 5 bytes
       int ch = buf[ptr++];
       if (ch < 0) {
-        v |= ((ch & 0x7F) << 7);
+        v |= (ch & 0x7F) << 7;
         ch = buf[ptr++];
         if (ch < 0) {
-          v |= ((ch & 0x7F) << 14);
+          v |= (ch & 0x7F) << 14;
           ch = buf[ptr++];
           if (ch < 0) {
-            v |= ((ch & 0x7F) << 21);
+            v |= (ch & 0x7F) << 21;
 
             // and now the last byte; at most 4 bits
             int last = buf[ptr++] & 0xFF;
@@ -2067,15 +2098,15 @@ public class CustomProtobufParser extends ProtobufParser {
               _inputPtr = ptr;
               _reportTooLongVInt(last);
             }
-            v |= (last << 28);
+            v |= last << 28;
           } else {
-            v |= (ch << 21);
+            v |= ch << 21;
           }
         } else {
-          v |= (ch << 14);
+          v |= ch << 14;
         }
       } else {
-        v |= (ch << 7);
+        v |= ch << 7;
       }
     }
     _inputPtr = ptr;
@@ -2085,7 +2116,8 @@ public class CustomProtobufParser extends ProtobufParser {
     return v;
   }
 
-  protected int _decodeVIntSlow() throws IOException
+  @Override
+protected int _decodeVIntSlow() throws IOException
   {
     int v = 0;
     int shift = 0;
@@ -2132,9 +2164,9 @@ public class CustomProtobufParser extends ProtobufParser {
       }
 
       if (ch >= 0) {
-        return v | (ch << shift);
+        return v | ch << shift;
       }
-      v |= ((ch & 0x7f) << shift);
+      v |= (ch & 0x7f) << shift;
       shift += 7;
     }
   }
@@ -2142,7 +2174,7 @@ public class CustomProtobufParser extends ProtobufParser {
   private long _decodeVLong() throws IOException
   {
     // 10 x 7 = 70 bits -> all we need is 64
-    if ((_inputPtr + 10) > _inputEnd) {
+    if (_inputPtr + 10 > _inputEnd) {
       return _decodeVLongSlow();
     }
     final byte[] buf = _inputBuffer;
@@ -2156,65 +2188,66 @@ public class CustomProtobufParser extends ProtobufParser {
     v &= 0x7F;
     int ch = buf[_inputPtr++];
     if (ch >= 0) {
-      return v | (ch << 7);
+      return v | ch << 7;
     }
-    v |= ((ch & 0x7F) << 7);
+    v |= (ch & 0x7F) << 7;
     ch = buf[_inputPtr++];
     if (ch >= 0) {
-      return v | (ch << 14);
+      return v | ch << 14;
     }
-    v |= ((ch & 0x7F) << 14);
+    v |= (ch & 0x7F) << 14;
     ch = buf[_inputPtr++];
     if (ch >= 0) {
-      return v | (ch << 21);
+      return v | ch << 21;
     }
-    v |= ((ch & 0x7F) << 21);
+    v |= (ch & 0x7F) << 21;
 
     // 4 bytes gotten. How about 4 more?
-    long l = (long) v;
+    long l = v;
 
     v = buf[_inputPtr++];
     if (v >= 0) {
-      return (((long) v) << 28) | l;
+      return (long) v << 28 | l;
     }
     v &= 0x7F;
     ch = buf[_inputPtr++];
     if (ch >= 0) {
-      long l2 = (v | (ch << 7));
-      return (l2 << 28) | l;
+      long l2 = v | ch << 7;
+      return l2 << 28 | l;
     }
-    v |= ((ch & 0x7F) << 7);
+    v |= (ch & 0x7F) << 7;
     ch = buf[_inputPtr++];
     if (ch >= 0) {
-      long l2 = (v | (ch << 14));
-      return (l2 << 28) | l;
+      long l2 = v | ch << 14;
+      return l2 << 28 | l;
     }
-    v |= ((ch & 0x7F) << 14);
+    v |= (ch & 0x7F) << 14;
     ch = buf[_inputPtr++];
     if (ch >= 0) {
-      long l2 = (v | (ch << 21));
-      return (l2 << 28) | l;
+      long l2 = v | ch << 21;
+      return l2 << 28 | l;
     }
-    v |= ((ch & 0x7F) << 21);
+    v |= (ch & 0x7F) << 21;
 
     // So far so good. Possibly 2 more bytes to get and we are done
-    l |= (((long) v) << 28);
+    l |= (long) v << 28;
 
     v = buf[_inputPtr++];
     if (v >= 0) {
-      return (((long) v) << 56) | l;
+      return (long) v << 56 | l;
     }
     v &= 0x7F;
     ch = buf[_inputPtr++] & 0xFF;
     if (ch > 0x1) { // error; should have at most 1 bit at the last value
       _reportTooLongVInt(ch);
     }
-    v |= ((ch & 0x7F) << 7);
+    v |= (ch & 0x7F) << 7;
 
-    return (((long) v) << 56) | l;
+    return (long) v << 56 | l;
   }
 
-  protected long _decodeVLongSlow() throws IOException
+  @Override
+protected long _decodeVLongSlow() throws IOException
   {
     // since only called rarely, no need to optimize int vs long
     long v = 0;
@@ -2232,24 +2265,24 @@ public class CustomProtobufParser extends ProtobufParser {
         }
       }
       if (ch >= 0) {
-        long l = (long) ch;
-        return v | (l << shift);
+        long l = ch;
+        return v | l << shift;
       }
       ch &= 0x7F;
-      long l = (long) ch;
-      v |= (l << shift);
+      long l = ch;
+      v |= l << shift;
       shift += 7;
     }
   }
 
   protected final int _decode32BitsCtrip() throws IOException {
     int ptr = _inputPtr;
-    if ((ptr + 3) >= _inputEnd) {
+    if (ptr + 3 >= _inputEnd) {
       return _slow32Ctrip();
     }
     final byte[] b = _inputBuffer;
-    int v = (b[ptr] & 0xFF) | ((b[ptr+1] & 0xFF) << 8)
-        | ((b[ptr+2] & 0xFF) << 16) | (b[ptr+3] << 24);
+    int v = b[ptr] & 0xFF | (b[ptr+1] & 0xFF) << 8
+        | (b[ptr+2] & 0xFF) << 16 | b[ptr+3] << 24;
 
     _inputPtr = ptr+4;
     return v;
@@ -2263,27 +2296,27 @@ public class CustomProtobufParser extends ProtobufParser {
     if (_inputPtr >= _inputEnd) {
       loadMoreGuaranteedCtrip();
     }
-    v |= ((_inputBuffer[_inputPtr++] & 0xFF) << 8);
+    v |= (_inputBuffer[_inputPtr++] & 0xFF) << 8;
     if (_inputPtr >= _inputEnd) {
       loadMoreGuaranteedCtrip();
     }
-    v |= ((_inputBuffer[_inputPtr++] & 0xFF) << 16);
+    v |= (_inputBuffer[_inputPtr++] & 0xFF) << 16;
     if (_inputPtr >= _inputEnd) {
       loadMoreGuaranteedCtrip();
     }
-    return v | (_inputBuffer[_inputPtr++] << 24); // sign will shift away
+    return v | _inputBuffer[_inputPtr++] << 24; // sign will shift away
   }
 
   protected final long _decode64BitsCtrip() throws IOException {
     int ptr = _inputPtr;
-    if ((ptr + 7) >= _inputEnd) {
+    if (ptr + 7 >= _inputEnd) {
       return _slow64Ctrip();
     }
     final byte[] b = _inputBuffer;
-    int i1 = (b[ptr++] & 0xFF) | ((b[ptr++] & 0xFF) << 8)
-        | ((b[ptr++] & 0xFF) << 16) | (b[ptr++] << 24);
-    int i2 = (b[ptr++] & 0xFF) | ((b[ptr++] & 0xFF) << 8)
-        | ((b[ptr++] & 0xFF) << 16) | (b[ptr++] << 24);
+    int i1 = b[ptr++] & 0xFF | (b[ptr++] & 0xFF) << 8
+        | (b[ptr++] & 0xFF) << 16 | b[ptr++] << 24;
+    int i2 = b[ptr++] & 0xFF | (b[ptr++] & 0xFF) << 8
+        | (b[ptr++] & 0xFF) << 16 | b[ptr++] << 24;
     _inputPtr = ptr;
     return _longCtrip(i1, i2);
   }
@@ -2298,7 +2331,7 @@ public class CustomProtobufParser extends ProtobufParser {
     long high = i2;
     high <<= 32;
     long low = i1;
-    low = (low << 32) >>> 32;
+    low = low << 32 >>> 32;
     return high | low;
   }
 

@@ -5,7 +5,7 @@
 
     <groupId>com.ctrip.soa.caravan</groupId>
     <artifactId>caravan</artifactId>
-    <version>1.11.15</version>
+    <version>1.11.16</version>
     <packaging>pom</packaging>
     <name>Caravan</name>
     <description>Ctrip SOA Caravan Toolkit</description>

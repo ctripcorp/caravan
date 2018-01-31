@@ -33,8 +33,8 @@ public class DecimalConverter {
       unscaledFirst = 1;
     }
 
-    if (scale > 28) {
-      throw new IllegalArgumentException("BigDecimal scale exceeds .Net Decimal limit of 28");
+    if (scale > 28 || scale < 0) {
+        throw new IllegalArgumentException(String.format("BigDecimal %s with scale %s exceeds .Net Decimal range of [0, 28]", paramBigDecimal, scale));
     }
     result[1] = (byte) scale;
 

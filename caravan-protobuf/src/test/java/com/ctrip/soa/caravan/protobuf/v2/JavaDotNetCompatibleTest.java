@@ -6,6 +6,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.ctrip.soa.caravan.common.serializer.SerializationException;
 import com.ctrip.soa.caravan.common.value.DateValues;
 import com.ctrip.soa.caravan.protobuf.v2.customization.CustomProtobufParser;
 import com.ctrip.soa.caravan.protobuf.v2.Pojo14.SomeEnum;
@@ -610,10 +611,45 @@ public class JavaDotNetCompatibleTest {
   }
 
   @Test
-  public void testBigDecimal() {
+  public void testBigDecimalNormal() {
     String[] values = new String[]{"20.5", "-20.5", "2", "-2", "0", "20", "20000", "-20000", "0.000001", "-0.000001"};
 
     for (String value : values) {
+        assertTrue(testBigDecimalWork(value));
+    }
+  }
+
+  @Test
+  public void testBigDecimalLongMinValue() {
+      assertTrue(testBigDecimalWork(Long.toString(Long.MIN_VALUE)));
+  }
+
+  @Test
+  public void testBigDecimalLongMaxValue() {
+      assertTrue(testBigDecimalWork(Long.toString(Long.MAX_VALUE)));
+  }
+
+  @Test(expected = SerializationException.class)
+  public void testBigDecimalDoubleMinValue() {
+      testBigDecimalWork(Double.toString(Double.MIN_VALUE));
+  }
+
+  @Test(expected = SerializationException.class)
+  public void testBigDecimalDoubleMaxValue() {
+      testBigDecimalWork(Double.toString(Double.MAX_VALUE));
+  }
+
+  @Test(expected = SerializationException.class)
+  public void testBigDecimalFloatMinValue() {
+      testBigDecimalWork(Float.toString(Float.MIN_VALUE));
+  }
+
+  @Test(expected = SerializationException.class)
+  public void testBigDecimalFloatMaxValue() {
+      testBigDecimalWork(Float.toString(Float.MAX_VALUE));
+  }
+
+  private boolean testBigDecimalWork(String value) {
       Pojo10 p = new Pojo10();
       p.setBigDecimal(new BigDecimal(value));
 
@@ -621,8 +657,7 @@ public class JavaDotNetCompatibleTest {
       JacksonProtobuf2Serializer.INSTANCE.serialize(bout, p);
 
       Pojo10 got = JacksonProtobuf2Serializer.INSTANCE.deserialize(new ByteArrayInputStream(bout.toByteArray()), Pojo10.class);
-      assertEquals(p.getBigDecimal(), got.getBigDecimal());
-    }
+      return p.getBigDecimal().equals(got.getBigDecimal());
   }
 
   @Test

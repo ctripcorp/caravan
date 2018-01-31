@@ -5,7 +5,7 @@
 
     <groupId>com.ctrip.soa.caravan</groupId>
     <artifactId>caravan</artifactId>
-    <version>1.11.16</version>
+    <version>1.12.0</version>
     <packaging>pom</packaging>
     <name>Caravan</name>
     <description>Ctrip SOA Caravan Toolkit</description>
@@ -122,7 +122,8 @@
         <source.encoding>UTF-8</source.encoding>
         <slf4j.version>1.7.21</slf4j.version>
         <guava.version>19.0</guava.version>
-        <jackson.version>2.9.2</jackson.version>
+        <jackson.version>2.9.4</jackson.version>
+		<FastInfoset.version>1.2.13</FastInfoset.version>
         <asm.version>5.2</asm.version>
         <ziplet.version>2.1.2</ziplet.version>
         <httpasyncclient.version>4.1.2</httpasyncclient.version>
@@ -183,6 +184,11 @@
                 <artifactId>jackson-dataformat-xml</artifactId>
                 <version>${jackson.version}</version>
             </dependency>
+			<dependency>
+				<groupId>com.sun.xml.fastinfoset</groupId>
+				<artifactId>FastInfoset</artifactId>
+				<version>${FastInfoset.version}</version>
+			</dependency>
             <dependency>
                 <groupId>org.apache.httpcomponents</groupId>
                 <artifactId>httpcore</artifactId>

@@ -50,7 +50,7 @@ public class DynamicScheduledThread extends Thread {
         if (initdelay > 0)
             Threads.sleep(initdelay);
 
-        while (true) {
+        while (!this.isInterrupted()) {
             if (_isShutdown.get())
                 return;
 

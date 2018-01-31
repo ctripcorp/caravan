@@ -725,10 +725,10 @@ protected void _releaseBuffers() throws IOException
     }
     while (true) {
       _skipUnknownValue(wireType);
-      if (_state == STATE_NESTED_KEY) {
-        if (_checkEnd()) {
+      if (_checkEnd()) {
           return _currToken = JsonToken.END_OBJECT;
-        }
+      }
+      if (_state == STATE_NESTED_KEY) {
         if (_inputPtr >= _inputEnd) {
           loadMoreGuaranteedCtrip();
         }
@@ -884,9 +884,10 @@ protected void _releaseBuffers() throws IOException
 
       ProtobufField f = _findField(id);
       if (f == null) {
-        _skipUnknownField(id, wireType);
-        // may or may not match, but let caller figure it out
-        return null;
+          if (_skipUnknownField(id, wireType) != JsonToken.FIELD_NAME) {
+              return null;
+          }
+          // sub-optimal as skip method already set it, but:
       }
       String name = _currentField.name;
       _parsingContext.setCurrentName(name);
@@ -920,9 +921,10 @@ protected void _releaseBuffers() throws IOException
 
       ProtobufField f = _findField(id);
       if (f == null) {
-        _skipUnknownField(id, wireType);
-        // may or may not match, but let caller figure it out
-        return null;
+          if (_skipUnknownField(id, wireType) != JsonToken.FIELD_NAME) {
+              return null;
+          }
+          // sub-optimal as skip method already set it, but:
       }
       final String name = _currentField.name;
       _parsingContext.setCurrentName(name);
